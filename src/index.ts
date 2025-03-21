@@ -94,32 +94,29 @@ log(
   ]);
 
   if (setupChoice === "Continue with CLI (recommended)") {
-    log(yellow("We use Clerk to manage users and organizations."));
-    log(
-      yellow(
-        "You can get Clerk keys for FREE at https://clerk.com/. We plan to remove this dependency asap.",
-      ),
-    );
+    log(yellow("Let's configure your user account."));
 
     const answers = await inquirer.prompt([
       {
         type: "input",
-        name: "CLERK_PUBLISHABLE_KEY",
-        message: "Enter your Clerk Publishable Key:",
+        name: "INITIAL_USER_EMAIL",
+        message: "Enter your email:",
+        default: "admin@supallm123",
         validate: (input) => {
           if (!input) {
-            return "Clerk Publishable Key cannot be empty. This is where your organization will be stored.";
+            return "Email cannot be empty.";
           }
           return true;
         },
       },
       {
         type: "input",
-        name: "CLERK_SECRET_KEY",
-        message: "Enter your Clerk Secret Key:",
+        name: "INITIAL_USER_PASSWORD",
+        message: "Enter your password:",
+        default: "supallm123",
         validate: (input) => {
           if (!input) {
-            return "Clerk Secret Key cannot be empty. This is where your organization will be stored.";
+            return "Password cannot be empty.";
           }
           return true;
         },
@@ -129,12 +126,12 @@ log(
     // Modify .env file
     let envContent = fs.readFileSync(".env", "utf8");
     envContent = envContent.replace(
-      /^CLERK_PUBLISHABLE_KEY=.*/m,
-      `CLERK_PUBLISHABLE_KEY=${answers.CLERK_PUBLISHABLE_KEY}`,
+      /^INITIAL_USER_EMAIL=.*/m,
+      `INITIAL_USER_EMAIL=${answers.INITIAL_USER_EMAIL}`,
     );
     envContent = envContent.replace(
-      /^CLERK_SECRET_KEY=.*/m,
-      `CLERK_SECRET_KEY=${answers.CLERK_SECRET_KEY}`,
+      /^INITIAL_USER_PASSWORD=.*/m,
+      `INITIAL_USER_PASSWORD=${answers.INITIAL_USER_PASSWORD}`,
     );
     fs.writeFileSync(".env", envContent);
 
@@ -157,7 +154,7 @@ log(
       fs.writeFileSync(".env", envContent);
     }
 
-    const { frontendPort } = await inquirer.prompt([
+    const { frontendPort, backendPort } = await inquirer.prompt([
       {
         type: "input",
         name: "frontendPort",
@@ -172,6 +169,25 @@ log(
           return true;
         },
       },
+      {
+        type: "input",
+        name: "backendPort",
+        message:
+          "Enter the port you want to run the Supallm API on (default is 3001):",
+        default: "3001",
+        validate: (input, answers) => {
+          const port = parseInt(input, 10);
+
+          if (parseInt(answers.frontendPort) === port) {
+            return "Port cannot be the same as the frontend port.";
+          }
+
+          if ([3000, 5431, 6379].includes(port)) {
+            return "Port is already in use. Please choose a different port than 3000, 5431, 6379.";
+          }
+          return true;
+        },
+      },
     ]);
 
     dashboardPort = frontendPort;
@@ -180,6 +196,18 @@ log(
       envContent = envContent.replace(
         /^FRONTEND_PORT=.*/m,
         `FRONTEND_PORT=${frontendPort}`,
+      );
+      fs.writeFileSync(".env", envContent);
+    }
+
+    if (backendPort) {
+      envContent = envContent.replace(
+        /^BACKEND_PORT=.*/m,
+        `BACKEND_PORT=${backendPort}`,
+      );
+      envContent = envContent.replace(
+        /^SUPALLM_API_URL=.*/m,
+        `SUPALLM_API_URL=http://localhost:${backendPort}`,
       );
       fs.writeFileSync(".env", envContent);
     }
