@@ -6,7 +6,7 @@ import ora from "ora";
 import axios from "axios";
 import fs from "fs";
 import crypto from "crypto";
-
+import { execSync } from "child_process";
 // ANSI color helpers
 const log = console.log;
 const green = chalk.green;
@@ -101,7 +101,7 @@ log(
         type: "input",
         name: "INITIAL_USER_EMAIL",
         message: "Enter your email:",
-        default: "admin@supallm123",
+        default: "admin@supallm.com",
         validate: (input) => {
           if (!input) {
             return "Email cannot be empty.";
@@ -215,11 +215,28 @@ log(
 
   log(green("\n🎉 Your Supallm instance is ready."));
   log("------------------------------------------------");
-  log(`📄 Next Steps:
+
+  const { startDocker } = await inquirer.prompt([
+    {
+      type: "list",
+      name: "startDocker",
+      message: "Start the stack now?",
+      choices: ["Yes", "No, I will do it myself"],
+    },
+  ]);
+
+  if (startDocker === "Yes") {
+    execSync("docker compose up --build -d", { stdio: "inherit" });
+    log(`📄 Next Step:      
+      
+      🚀  Open the dashboard at ${cyan(`http://localhost:${dashboardPort}`)} 🚀
+      `);
+  } else {
+    log(`📄 Next Steps:
 
     1️⃣  Start your stack with: ${cyan("docker compose up -d")}
     
     2️⃣  Open the dashboard at ${cyan(`http://localhost:${dashboardPort}`)} 🚀
     `);
-  log(`Run ${cyan("docker compose up -d")} to launch it.`);
+  }
 })();
