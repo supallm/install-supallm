@@ -206,8 +206,8 @@ log(
         `BACKEND_PORT=${backendPort}`,
       );
       envContent = envContent.replace(
-        /^SUPALLM_API_URL=.*/m,
-        `SUPALLM_API_URL=http://localhost:${backendPort}`,
+        /^SUPALLM_PUBLIC_API_URL=.*/m,
+        `SUPALLM_PUBLIC_API_URL=http://localhost:${backendPort}`,
       );
       fs.writeFileSync(".env", envContent);
     }
